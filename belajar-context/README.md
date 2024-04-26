@@ -109,3 +109,110 @@ Jelaskan apa yang telah Anda pelajari dan bagaimana tampilannya saat ini?
 - Dalam praktikum ini, saya belajar tentang penggunaan context dalam React untuk menyediakan data ke komponen-komponen child. Saya juga mempraktikkan pembuatan struktur folder berdasarkan prinsip atomic design dan pembuatan komponen atom dengan variasi ukuran teks heading.
 
 - Pada hasil running di atas, dapat dilihat bahwa tampilan saat ini menunjukkan hierarki heading yang berbeda-beda ukurannya, mulai dari level 1 hingga level 4, sesuai dengan data level yang diberikan ke komponen Heading.
+
+### **Membuat Context**
+
+Membuat file baru di `src\utilities\context\mycontext.tsx` yang berisi kode sebagai berikut:
+
+```bash
+import MainPage from "@/components/templates/main_page";
+
+export default function Home() {
+    return <MainPage />;
+}
+```
+
+Satu-satunya argumen untuk createContext adalah nilai default. Disini, 1 merujuk pada level heading terbesar, tapi Anda dapat mengoper nilai apa pun (bahkan sebuah objek). Anda akan melihat pentingnya nilai default di langkah selanjutnya.
+
+### **Menggunakan Context**
+
+Mengubah isi kode komponen `Heading` dengan Impor `useContext` Hook dari React dan context Anda:
+
+```bash
+import { LevelContext } from "@/utilities/context/mycontext";
+import { useContext } from "react";
+```
+
+Saat ini, komponen `Heading` membaca `level` dari props. Sebagai gantinya, hapus prop `level ` dan baca nilai dari context yang baru saja Anda impor, `LevelContext`:
+
+```bash
+export default function Heading({ children }: { children: any }) {
+    const level = useContext(LevelContext);
+    switch (level) {
+        case 1:
+            return <h1>{children}</h1>;
+```
+
+useContext adalah sebuah Hook. Sama seperti useState dan useReducer, Anda hanya dapat memanggil sebuah Hook secara langsung di dalam komponen React (bukan di dalam pengulangan atau pengkondisian). useContext memberitahu React bahwa komponen Heading mau membaca LevelContext.
+
+Sekarang komponen Heading tidak membutuhkan sebuah prop level, Anda tidak perlu mengoper level prop ke Heading di JSX Anda. Sebagai gantinya Perbarui JSX sehingga Section yang dapat menerimanya:
+
+```
+export default function MainPage() {
+    return (
+        <Section level={1}>
+            <Heading>Judul</Heading>
+            <Section level={2}>
+                <Heading>Heading</Heading>
+                <Heading>Heading</Heading>
+                <Heading>Heading</Heading>
+                <Section level={3}>
+                    <Heading>Sub-heading</Heading>
+                    <Heading>Sub-heading</Heading>
+                    <Heading>Sub-heading</Heading>
+                    <Section level={4}>
+                        <Heading>Sub-sub-heading</Heading>
+                        <Heading>Sub-sub-heading</Heading>
+                        <Heading>Sub-sub-heading</Heading>
+                    </Section>
+                </Section>
+            </Section>
+        </Section>
+    );
+}
+```
+
+### **Menyediakan context**
+
+Komponen Section saat ini merenders anaknya, bungkus mereka semua dengan sebuah context provider untuk menyediakan LevelContext kepada mereka seperti kode berikut:
+
+```bash
+import { LevelContext } from "@/utilities/context/mycontext";
+
+export default function Section({ level, children }: { level: number, children: any }) {
+    return (
+        <section className={`section`}>
+            <LevelContext.Provider value={level}>
+                {children}
+            </LevelContext.Provider>
+        </section>
+    );
+}
+```
+
+Ini memberitahu React: "jika ada komponen di dalam < Section > ini yang meminta LevelContext, berikan level ini." Komponen akan menggunakan nilai dari < LevelContext.Provider > terdekat di pohon UI (tree) di atasnya.
+
+### **Jawaban Soal 2**
+
+Hasil run: 
+
+![Screenshot](assets-report/02.png)
+
+- Masih terdapat eror, dimana komponen yang diimpor membutuhkan `createContext` yang hanya bekerja pada `komponen klien`, namun belum ada parents yang menggunakan `use client`, sehingga dianggap komponen server secara default. Oleh karena itu, perlu ditambahkan `'use client';` pada file yang mengimpor komponen tersebut. Berikut perbaikan kode pada file `src/app/page.tsx`:
+
+```bash
+'use client';
+
+import MainPage from "@/components/templates/main_page";
+
+export default function Home() {
+  return <MainPage />;
+}
+```
+Dan berikut tampilannya saat kodenya sudah diperbaiki: 
+
+![Screenshot](assets-report/03.png)
+
+Tampilannya sama seperti sebelumnya, menampilkan hierarki dari Heading text.
+
+- `useContext` ialah sebuah `Hook`. Seperti halnya `useState` dan `useReducer`, hanya dapat memanggil sebuah Hook secara langsung di dalam komponen React (bukan di dalam pengulangan atau pengkondisian). `useContext` memberitahu React bahwa komponen `Heading` mau membaca `LevelContext`.
