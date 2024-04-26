@@ -216,3 +216,85 @@ Dan berikut tampilannya saat kodenya sudah diperbaiki:
 Tampilannya sama seperti sebelumnya, menampilkan hierarki dari Heading text.
 
 - `useContext` ialah sebuah `Hook`. Seperti halnya `useState` dan `useReducer`, hanya dapat memanggil sebuah Hook secara langsung di dalam komponen React (bukan di dalam pengulangan atau pengkondisian). `useContext` memberitahu React bahwa komponen `Heading` mau membaca `LevelContext`.
+
+### **Menggunakan dan menyediakan context dari komponen yang sama**
+
+Saat ini, masih harus menentukan setiap `level section` secara manual, karena context memungkinan membaca informasi dari komponen di atasnya, setiap `Section` dapat membaca level dari Section di atasnya, dan mengoper `level + 1` ke bawah secara otomatis. Berikut adalah bagaimana dapat melakukannya dengan mengubah sedikit kode pada komponen `Section`:
+
+```bash
+export default function Section({ children }: { children: any }) {
+    const level = useContext(LevelContext);
+    return (
+        <section className={`section`}>
+            <LevelContext.Provider value={level}>
+                {children}
+            </LevelContext.Provider>
+        </section>
+    );
+}
+```
+
+Dengan perubahan ini, Anda tidak perlu mengoper prop level baik ke `< Section >` atau ke `< Heading >`: 
+
+```bash
+export default function MainPage() {
+    return (
+        <Section>
+            <Heading>Title</Heading>
+            <Section>
+                <Heading>Heading</Heading>
+                <Heading>Heading</Heading>
+                <Heading>Heading</Heading>
+                <Section>
+                    <Heading>Sub-heading</Heading>
+                    <Heading>Sub-heading</Heading>
+                    <Heading>Sub-heading</Heading>
+                    <Section>
+                        <Heading>Sub-sub-heading</Heading>
+                        <Heading>Sub-sub-heading</Heading>
+                        <Heading>Sub-sub-heading</Heading>
+                    </Section>
+                </Section>
+            </Section>
+        </Section>
+    );
+}
+```
+
+```bash
+export default function Heading({ children }: { children: any }) {
+    const level = useContext(LevelContext);
+    switch (level) {
+        case 0:
+            throw Error('Heading must be inside a Section!');
+        case 1:
+            return <h1>{children}</h1>;
+        case 2:
+            return <h2>{children}</h2>;
+        case 3:
+            return <h3>{children}</h3>;
+        case 4:
+            return <h4>{children}</h4>;
+        case 5:
+            return <h5>{children}</h5>;
+        case 6:
+            return <h6>{children}</h6>;
+        default:
+            throw Error('Unknown level: ' + level);
+    }
+}
+```
+
+Sekarang keduanya `Heading` dan `Section` membaca `LevelContext` untuk mencari tahu seberapa "dalam" mereka. Dan `Section` membungkus anaknya ke dalam `LevelContext` untuk menentukan bahwa apa pun yang ada di dalamnya berada pada level yang "lebih dalam".
+
+### **Jawaban Soal 3**
+
+Hasil run: 
+
+![Screenshot](assets-report/04.png)
+
+- Menggunakan `useContext` untuk `Membaca Context`.
+
+- Menggunakan `Context` untuk Menentukan `Ukuran Heading`. Section menerima children dan menambahkan 1 ke level sebelumnya. Dengan demikian, semua Heading yang berada di dalam Section akan memiliki ukuran yang lebih besar dari Heading yang berada di luar Section.
+
+- Tampilannya masih sama dengan yang sebelumnya. 
